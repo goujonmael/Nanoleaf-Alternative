@@ -1,16 +1,3 @@
-/*
- * If you encounter any issues:
- * - check the readme.md at https://github.com/sinricpro/esp8266-esp32-sdk/blob/master/README.md
- * - ensure all dependent libraries are installed
- *   - see https://github.com/sinricpro/esp8266-esp32-sdk/blob/master/README.md#arduinoide
- *   - see https://github.com/sinricpro/esp8266-esp32-sdk/blob/master/README.md#dependencies
- * - open serial monitor and check whats happening
- * - check full user documentation at https://sinricpro.github.io/esp8266-esp32-sdk
- * - visit https://github.com/sinricpro/esp8266-esp32-sdk/issues and check for existing issues or open a new one
- */
-
-
-
 // Uncomment the following line to enable serial debug output
 //#define ENABLE_DEBUG
 
