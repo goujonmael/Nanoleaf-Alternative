@@ -5,9 +5,9 @@
 const char* ssid = "MYSSID";
 const char* password = "MYPASS";
 // Pins pour les LEDs
-const int bluePin = 14; // D5
-const int redPin = 13; // D6
-const int greenPin = 12; // D7
+const int bluePin = 13; // D5
+const int redPin = 12; // D6
+const int greenPin = 14; // D7
 
 ESP8266WebServer server(80);
 ESP8266WebServer serverSecure(443);
