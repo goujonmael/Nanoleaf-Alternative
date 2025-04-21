@@ -4,6 +4,7 @@
 // Remplacez par vos identifiants WiFi
 const char* ssid = "MYSSID";
 const char* password = "MYPASS";
+
 // Pins pour les LEDs
 const int bluePin = 13; // D5
 const int redPin = 12; // D6
@@ -12,6 +13,14 @@ const int greenPin = 14; // D7
 ESP8266WebServer server(80);
 ESP8266WebServer serverSecure(443);
 
+bool fireplaceActive = false; // Variable pour indiquer si l'effet cheminée est activé
+int currentR = 0;
+int currentG = 0;
+int currentB = 0;
+int targetR = 0;
+int targetG = 0;
+int targetB = 0;
+
 void handleRoot() {
   String html = "<!DOCTYPE html><html><head><title>Controle des LEDs</title>";
   html += "<meta name='viewport' content='width=device-width, initial-scale=1'>";
@@ -19,7 +28,7 @@ void handleRoot() {
   html += "html, body { height: auto; margin: 0; padding: 0; }"; // Ajout de cette ligne pour ajuster la hauteur
   html += "body { font-family: Arial, sans-serif; background-color: #f0f0f0; text-align: center; padding: 20px; }";
   html += "h1 { color: #333; }";
-  html += "form { background: #fff; padding: 20px; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1); display: inline-block; }";
+  html += "form { background: #fff; padding: 20px; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1); display: inline-block; margin: 10px; }";
   html += "input[type='submit'] { background-color: #4CAF50; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; }";
   html += "input[type='submit']:hover { background-color: #45a049; }";
   html += "@media (max-width: 600px) { form { width: 100%; box-sizing: border-box; } }";
@@ -37,17 +46,17 @@ void handleRoot() {
   html += "});";
   html += "</script>";
   html += "</head><body>";
-  html += "<h1>Contrôle des LEDs</h1>";
+  html += "<h1>Controle des LEDs</h1>";
   html += "<form action='/setColor' method='GET'>";
   html += "Choisissez une couleur: <input class='jscolor' name='color' value='ffffff'><br><br>";
   html += "<input type='submit' value='Envoyer'>";
+  html += "</form>";
+  html += "<form action='/fireplace' method='GET'>";
+  html += "<input type='submit' value='Effet Cheminee'>";
   html += "</form></body></html>";
   server.send(200, "text/html", html);
   Serial.println("Page principale servie");
 }
-
-
-
 
 void handleSetColor() {
   if (server.hasArg("color")) {
@@ -67,8 +76,23 @@ void handleSetColor() {
     Serial.print(g);
     Serial.print(", B=");
     Serial.println(b);
+
+    fireplaceActive = false; // Désactiver l'effet cheminée lorsque la couleur est mise à jour
   }
   server.send(200, "text/plain", "Couleurs mises a jour");
+}
+
+void handleFireplace() {
+  fireplaceActive = !fireplaceActive; // Activer ou désactiver l'effet cheminée
+  if (fireplaceActive) {
+    // Définir une nouvelle couleur cible lors de l'activation
+    targetR = random(128, 220);
+    targetG = random(0, 90);
+    targetB = 0;
+    server.send(200, "text/plain", "Effet Cheminee active");
+  } else {
+    server.send(200, "text/plain", "Effet Cheminee désactive");
+  }
 }
 
 void handleRedirect() {
@@ -76,6 +100,29 @@ void handleRedirect() {
   serverSecure.sendHeader("Location", "http://" + WiFi.localIP().toString(), true);
   serverSecure.send(302, "text/plain", ""); // Redirection HTTP 302
   serverSecure.client().stop(); // Fermer la connexion client
+}
+
+void fireplaceEffect() {
+  // Interpolation des couleurs pour une transition en douceur
+  if (currentR < targetR) currentR++;
+  if (currentR > targetR) currentR--;
+  if (currentG < targetG) currentG++;
+  if (currentG > targetG) currentG--;
+  if (currentB < targetB) currentB++;
+  if (currentB > targetB) currentB--;
+
+  analogWrite(redPin, currentR);
+  analogWrite(greenPin, currentG);
+  analogWrite(bluePin, currentB);
+
+  // Mettre à jour les couleurs cibles après chaque transition
+  if (currentR == targetR && currentG == targetG && currentB == targetB) {
+    targetR = random(180, 255);
+    targetG = random(0, 80);
+    targetB = 0;
+  }
+
+  delay(10); // Ajuster cette valeur pour changer la fréquence de l'effet
 }
 
 void setup() {
@@ -87,11 +134,13 @@ void setup() {
   pinMode(greenPin, OUTPUT);
   pinMode(bluePin, OUTPUT);
 
+  delay(100);
+
   // Connexion au WiFi
   WiFi.begin(ssid, password);
   Serial.print("Connexion au WiFi ");
   Serial.print(ssid);
-  Serial.println("...");
+  Serial.println(".");
 
   int fadeValue = 0;
   int fadeAmount = 1; // Réduire cette valeur pour un fade plus lent
@@ -123,6 +172,7 @@ void setup() {
   // Configuration du serveur web sur le port 80
   server.on("/", handleRoot);
   server.on("/setColor", handleSetColor);
+  server.on("/fireplace", handleFireplace);
   server.begin();
   Serial.println("Serveur web démarré sur le port 80");
 
@@ -135,4 +185,8 @@ void setup() {
 void loop() {
   server.handleClient();
   serverSecure.handleClient();
+
+  if (fireplaceActive) {
+    fireplaceEffect();
+  }
 }
