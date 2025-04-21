@@ -5,6 +5,7 @@
 const char* ssid = "MYSSID";
 const char* password = "MYPASS";
 
+
 // Pins pour les LEDs
 const int bluePin = 13; // D5
 const int redPin = 12; // D6
@@ -86,8 +87,8 @@ void handleFireplace() {
   fireplaceActive = !fireplaceActive; // Activer ou désactiver l'effet cheminée
   if (fireplaceActive) {
     // Définir une nouvelle couleur cible lors de l'activation
-    targetR = random(128, 220);
-    targetG = random(0, 90);
+    targetR = random(200, 255);
+    targetG = random(0, 40);
     targetB = 0;
     server.send(200, "text/plain", "Effet Cheminee active");
   } else {
@@ -117,12 +118,12 @@ void fireplaceEffect() {
 
   // Mettre à jour les couleurs cibles après chaque transition
   if (currentR == targetR && currentG == targetG && currentB == targetB) {
-    targetR = random(180, 255);
-    targetG = random(0, 80);
+    targetR = random(200, 255);
+    targetG = random(0, 40);
     targetB = 0;
   }
 
-  delay(10); // Ajuster cette valeur pour changer la fréquence de l'effet
+  delay(30); // Ajuster cette valeur pour changer la fréquence de l'effet
 }
 
 void setup() {
@@ -156,7 +157,7 @@ void setup() {
     }
 
     delay(1); // Augmenter cette valeur pour un fade plus lent
-    Serial.print(".");
+    //Serial.print(".");
   }
 
   Serial.println("");
